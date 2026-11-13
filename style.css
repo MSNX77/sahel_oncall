@@ -1,0 +1,242 @@
+:root {
+  --primary: #0d9488;
+  --primary-dark: #0f766e;
+  --bg: #f0fdfa;
+  --card: #ffffff;
+  --text: #134e4a;
+  --muted: #5eead4;
+  --border: #ccfbf1;
+  --danger: #ef4444;
+  --success: #10b981;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Tahoma, 'Segoe UI', sans-serif;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding-bottom: 40px;
+}
+
+.app {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+/* Header */
+.header {
+  text-align: center;
+  padding: 20px 0 16px;
+}
+
+.logo {
+  font-size: 28px;
+  font-weight: bold;
+  color: var(--primary-dark);
+}
+
+.subtitle {
+  font-size: 14px;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+/* User Select */
+.user-section {
+  background: var(--card);
+  padding: 14px 16px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.user-section label {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 6px;
+  color: #64748b;
+}
+
+.user-section select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 15px;
+  background: #f8fffe;
+  color: var(--text);
+}
+
+/* Days */
+.days-section h2,
+.slots-section h2,
+.manager-panel h2 {
+  font-size: 16px;
+  margin-bottom: 12px;
+  color: var(--primary-dark);
+}
+
+.days-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.day-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.day-card:hover,
+.day-card.active {
+  border-color: var(--primary);
+  background: #ecfdf5;
+}
+
+.day-card .day-name {
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.day-card .day-date {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+/* Slots */
+.slots-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.slot-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.slot-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.slot-time {
+  font-weight: bold;
+  font-size: 15px;
+}
+
+.slot-count {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.slot-count span {
+  color: var(--primary);
+  font-weight: bold;
+}
+
+.btn-reserve {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-reserve:hover {
+  background: var(--primary-dark);
+}
+
+.btn-reserve.reserved {
+  background: var(--success);
+}
+
+.btn-reserve.disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+}
+
+/* Manager */
+.manager-toggle {
+  margin-top: 28px;
+  text-align: center;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--primary);
+  color: var(--primary);
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.manager-panel {
+  margin-top: 24px;
+  background: var(--card);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.manager-day {
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.manager-day:last-child {
+  border-bottom: none;
+}
+
+.manager-day h3 {
+  font-size: 14px;
+  margin-bottom: 8px;
+  color: var(--primary-dark);
+}
+
+.manager-slot {
+  font-size: 13px;
+  margin: 4px 0;
+  color: #334155;
+}
+
+.btn-secondary {
+  margin-top: 12px;
+  width: 100%;
+  padding: 10px;
+  background: #e2e8f0;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* Responsive */
+@media (max-width: 400px) {
+  .days-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

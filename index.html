@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>رزرو آنکال | مرکز ساحل</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">ساحل</div>
+      <div class="subtitle">رزرو آنکال پرسنل</div>
+    </header>
+
+    <!-- User Info -->
+    <section class="user-section">
+      <label>نام شما:</label>
+      <select id="userSelect">
+        <option value="">انتخاب کنید...</option>
+        <option value="سعیدی نژاد">محمد سعیدی نژاد</option>
+        <option value="میرجلیلی">محمد علی میرجلیلی</option>
+        <option value="مرادی">امین مرادی</option>
+        <option value="شمشیری">فاطمه شمشیری</option>
+        <option value="کریمی">فاطمه کریمی</option>
+        <option value="سلیمانی">کیمیا سلیمانی</option>
+      </select>
+    </section>
+
+    <!-- Days -->
+    <section class="days-section">
+      <h2>روزهای آینده</h2>
+      <div id="daysContainer" class="days-container"></div>
+    </section>
+
+    <!-- Time Slots for selected day -->
+    <section class="slots-section" id="slotsSection" style="display:none;">
+      <h2 id="selectedDayTitle">بازه‌های زمانی</h2>
+      <div id="slotsContainer" class="slots-container"></div>
+    </section>
+
+    <!-- Manager View Toggle -->
+    <section class="manager-toggle">
+      <button id="managerBtn" class="btn-outline">مشاهده وضعیت کلی (مدیر)</button>
+    </section>
+
+    <!-- Manager Panel -->
+    <section class="manager-panel" id="managerPanel" style="display:none;">
+      <h2>وضعیت آنکال همه پرسنل</h2>
+      <div id="managerContent"></div>
+      <button id="closeManager" class="btn-secondary">بستن</button>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
