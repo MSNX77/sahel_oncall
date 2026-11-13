@@ -1,141 +1,162 @@
 // ======================
-// داده‌های نمونه (بعداً به Firebase وصل می‌شود)
+// Storage helpers
 // ======================
-const staffList = [
-  "سعیدی نژاد", "میرجلیلی", "مرادی", "شمشیری", "کریمی", "سلیمانی"
-];
-
-// بازه‌های زمانی ثابت
-const timeSlots = [
-  { id: "morning", label: "صبح (۷ تا ۱۲)", start: 7, end: 12 },
-  { id: "afternoon", label: "عصر (۱۳ تا ۱۸)", start: 13, end: 18 },
-  { id: "night", label: "شب (۱۹ تا ۲۴)", start: 19, end: 24 }
-];
-
-// ذخیره‌سازی موقت در localStorage
-function getReservations() {
-  const data = localStorage.getItem("sahel_oncall");
-  return data ? JSON.parse(data) : {};
+function getData() {
+  const raw = localStorage.getItem("sahel_oncall_v2");
+  return raw ? JSON.parse(raw) : {};
 }
 
-function saveReservations(data) {
-  localStorage.setItem("sahel_oncall", JSON.stringify(data));
+function saveData(data) {
+  localStorage.setItem("sahel_oncall_v2", JSON.stringify(data));
 }
 
-// تولید ۷ روز آینده
-function getNextDays(count = 7) {
-  const days = [];
+// ======================
+// Generate next 10 days
+// ======================
+function getNextDays(count = 10) {
   const weekDays = ["یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنجشنبه", "جمعه", "شنبه"];
+  const days = [];
   const today = new Date();
 
   for (let i = 0; i < count; i++) {
     const d = new Date(today);
     d.setDate(today.getDate() + i);
-    const dayName = weekDays[d.getDay()];
-    const dateStr = d.toLocaleDateString("fa-IR");
-    const key = d.toISOString().split("T")[0]; // YYYY-MM-DD
-    days.push({ key, dayName, dateStr, full: d });
+    days.push({
+      key: d.toISOString().split("T")[0],
+      dayName: weekDays[d.getDay()],
+      dateStr: d.toLocaleDateString("fa-IR")
+    });
   }
   return days;
 }
 
 // ======================
-// رندر روزها
+// Render days (accordion)
 // ======================
 function renderDays() {
   const container = document.getElementById("daysContainer");
   container.innerHTML = "";
-  const days = getNextDays(7);
+  const days = getNextDays(10);
+  const data = getData();
 
-  days.forEach(day => {
-    const card = document.createElement("div");
-    card.className = "day-card";
-    card.innerHTML = `
-      <div class="day-name">${day.dayName}</div>
-      <div class="day-date">${day.dateStr}</div>
-    `;
-    card.onclick = () => selectDay(day, card);
-    container.appendChild(card);
-  });
-}
+  days.forEach((day, index) => {
+    const item = document.createElement("div");
+    item.className = "day-item";
+    item.dataset.key = day.key;
 
-let selectedDay = null;
-
-function selectDay(day, cardElement) {
-  // حذف active از بقیه
-  document.querySelectorAll(".day-card").forEach(c => c.classList.remove("active"));
-  cardElement.classList.add("active");
-
-  selectedDay = day;
-  document.getElementById("selectedDayTitle").textContent = `بازه‌های ${day.dayName} ${day.dateStr}`;
-  document.getElementById("slotsSection").style.display = "block";
-  renderSlots();
-}
-
-// ======================
-// رندر بازه‌ها
-// ======================
-function renderSlots() {
-  if (!selectedDay) return;
-
-  const user = document.getElementById("userSelect").value;
-  const reservations = getReservations();
-  const dayData = reservations[selectedDay.key] || {};
-
-  const container = document.getElementById("slotsContainer");
-  container.innerHTML = "";
-
-  timeSlots.forEach(slot => {
-    const people = dayData[slot.id] || [];
-    const isReserved = user && people.includes(user);
-    const count = people.length;
-
-    const card = document.createElement("div");
-    card.className = "slot-card";
-    card.innerHTML = `
-      <div class="slot-info">
-        <div class="slot-time">${slot.label}</div>
-        <div class="slot-count"><span>${count}</span> نفر آنکال</div>
-      </div>
-      <button class="btn-reserve ${isReserved ? 'reserved' : ''} ${!user ? 'disabled' : ''}"
-              data-slot="${slot.id}">
-        ${isReserved ? "رزرو شده ✓" : "رزرو آنکال"}
-      </button>
-    `;
-
-    const btn = card.querySelector("button");
-    if (user) {
-      btn.onclick = () => toggleReservation(slot.id, user);
+    // Count total reservations for this day
+    let total = 0;
+    if (data[day.key]) {
+      Object.values(data[day.key]).forEach(arr => total += arr.length);
     }
 
-    container.appendChild(card);
+    item.innerHTML = `
+      <div class="day-header">
+        <div>
+          <div class="day-title">${day.dayName}</div>
+          <div class="day-date">${day.dateStr}${total > 0 ? ` • ${total} رزرو` : ""}</div>
+        </div>
+        <div class="day-arrow">▼</div>
+      </div>
+      <div class="hours-panel">
+        <div class="hours-grid" id="hours-${day.key}"></div>
+      </div>
+    `;
+
+    const header = item.querySelector(".day-header");
+    header.onclick = () => toggleDay(item, day.key);
+
+    container.appendChild(item);
   });
 }
 
-function toggleReservation(slotId, user) {
-  const reservations = getReservations();
-  if (!reservations[selectedDay.key]) {
-    reservations[selectedDay.key] = {};
-  }
-  if (!reservations[selectedDay.key][slotId]) {
-    reservations[selectedDay.key][slotId] = [];
-  }
+function toggleDay(item, dayKey) {
+  const isOpen = item.classList.contains("open");
 
-  const list = reservations[selectedDay.key][slotId];
-  const index = list.indexOf(user);
+  // Close all
+  document.querySelectorAll(".day-item").forEach(el => {
+    el.classList.remove("open");
+  });
 
-  if (index === -1) {
-    list.push(user);
-  } else {
-    list.splice(index, 1);
+  if (!isOpen) {
+    item.classList.add("open");
+    renderHours(dayKey);
   }
-
-  saveReservations(reservations);
-  renderSlots();
 }
 
 // ======================
-// پنل مدیر
+// Render hours 1-24
+// ======================
+function renderHours(dayKey) {
+  const grid = document.getElementById(`hours-${dayKey}`);
+  if (!grid) return;
+
+  const user = document.getElementById("tempName").value.trim();
+  const data = getData();
+  const dayData = data[dayKey] || {};
+
+  grid.innerHTML = "";
+
+  for (let h = 1; h <= 24; h++) {
+    const people = dayData[h] || [];
+    const isSelected = user && people.includes(user);
+    const count = people.length;
+
+    const btn = document.createElement("button");
+    btn.className = "hour-btn" + (isSelected ? " selected" : "");
+    btn.innerHTML = `
+      ${h}
+      <span class="count">${count > 0 ? count + " نفر" : "-"}</span>
+    `;
+
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      toggleHour(dayKey, h);
+    };
+
+    grid.appendChild(btn);
+  }
+}
+
+function toggleHour(dayKey, hour) {
+  const user = document.getElementById("tempName").value.trim();
+  if (!user) {
+    alert("لطفاً ابتدا نام خود را وارد کنید");
+    document.getElementById("tempName").focus();
+    return;
+  }
+
+  const data = getData();
+  if (!data[dayKey]) data[dayKey] = {};
+  if (!data[dayKey][hour]) data[dayKey][hour] = [];
+
+  const list = data[dayKey][hour];
+  const idx = list.indexOf(user);
+
+  if (idx === -1) {
+    list.push(user);
+  } else {
+    list.splice(idx, 1);
+  }
+
+  // Clean empty
+  if (list.length === 0) delete data[dayKey][hour];
+
+  saveData(data);
+  renderHours(dayKey);
+
+  // Update day header count
+  renderDays();
+  // Re-open the same day
+  const item = document.querySelector(`.day-item[data-key="${dayKey}"]`);
+  if (item) {
+    item.classList.add("open");
+    renderHours(dayKey);
+  }
+}
+
+// ======================
+// Manager panel
 // ======================
 document.getElementById("managerBtn").onclick = () => {
   document.getElementById("managerPanel").style.display = "block";
@@ -148,33 +169,36 @@ document.getElementById("closeManager").onclick = () => {
 
 function renderManager() {
   const content = document.getElementById("managerContent");
-  const reservations = getReservations();
-  const days = getNextDays(7);
+  const data = getData();
+  const days = getNextDays(10);
 
   let html = "";
   days.forEach(day => {
-    const dayData = reservations[day.key] || {};
-    html += `<div class="manager-day"><h3>${day.dayName} ${day.dateStr}</h3>`;
+    const dayData = data[day.key] || {};
+    const hours = Object.keys(dayData).map(Number).sort((a, b) => a - b);
 
-    timeSlots.forEach(slot => {
-      const people = dayData[slot.id] || [];
-      if (people.length > 0) {
-        html += `<div class="manager-slot">• ${slot.label}: ${people.join("، ")}</div>`;
-      } else {
-        html += `<div class="manager-slot" style="color:#94a3b8">• ${slot.label}: کسی رزرو نکرده</div>`;
+    if (hours.length === 0) return;
+
+    html += `<div class="manager-day"><h3>${day.dayName} ${day.dateStr}</h3>`;
+    hours.forEach(h => {
+      const people = dayData[h] || [];
+      if (people.length) {
+        html += `<div class="manager-slot">ساعت ${h}: ${people.join("، ")}</div>`;
       }
     });
-
     html += `</div>`;
   });
 
-  content.innerHTML = html || "<p>هنوز رزروی ثبت نشده</p>";
+  content.innerHTML = html || "<p style='color:#94a3b8;font-size:13px'>هنوز رزروی ثبت نشده</p>";
 }
 
-// تغییر کاربر → رندر مجدد
-document.getElementById("userSelect").onchange = () => {
-  if (selectedDay) renderSlots();
-};
+// Re-render hours when name changes
+document.getElementById("tempName").addEventListener("input", () => {
+  const openItem = document.querySelector(".day-item.open");
+  if (openItem) {
+    renderHours(openItem.dataset.key);
+  }
+});
 
-// شروع
+// Start
 renderDays();
